@@ -38,11 +38,20 @@ export default function AuthPage() {
         })
         if (error) throw error
       } else {
-        const { error } = await supabase.auth.signUp({
+        // Sign up user
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
         })
         if (error) throw error
+
+        // Create profile row for this new user
+        if (data.user) {
+          const { error: profileError } = await supabase.from("profiles").insert([
+            { id: data.user.id, role: "customer", email: data.user.email } // default role
+          ])
+          if (profileError) throw profileError
+        }
       }
 
       router.push("/")
@@ -86,9 +95,7 @@ export default function AuthPage() {
               />
             </div>
 
-            {error && (
-              <p className="text-sm text-red-500">{error}</p>
-            )}
+            {error && <p className="text-sm text-red-500">{error}</p>}
 
             <Button type="submit" className="w-full" disabled={loading}>
               {loading
